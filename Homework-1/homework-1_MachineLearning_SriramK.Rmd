@@ -74,7 +74,7 @@ sapply(cont_lm, lines)
 Consider making the linear classifier more flexible, by adding squared terms for x1 and x2 to the linear model
 
 ```{r}
-fit_lm_squared <- lm(y ~ x1^2+x2^2, data = data)
+fit_lm_squared <- lm(y ~ poly(x1,2)+poly(x2,2), data = data)
 predict_lm_squared <- predict(fit_lm_squared, newdata = data.frame(dat$xnew))
 pred_lm_squared <- matrix(predict_lm_squared, length(dat$px1), length(dat$px2))
 contour(pred_lm,
