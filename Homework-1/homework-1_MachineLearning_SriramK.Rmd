@@ -90,6 +90,17 @@ sapply(cont_lm_squared, lines)
 ```
 Describe how this more flexible model affects the bias-variance tradeoff
 
+
+Bias: 
+
+An error due to Bias is the distance between the predictions of a model and the true values. In models with high bias, the model pays little attention to training data and oversimplifies the model and learns the wrong relations by not taking in account all the features adequately.
+
+Variance: 
+
+Variance error is the Variability of model prediction for given data(The model is usually very complex). In models with high variance, the model pays a lot of attention to training data, to the point of memorizing the data rather than learning from it. A model with a high variance is not flexible to generalize to unseen data (test data).
+
 Bias - Variance Tradeoff : 
 
+Bias-variance trade-off is tension between the error introduced by the bias and the error produced by variance. Bias- Variance trade-off is about balancing and finding a sweet spot between the two types of errors.
 
+In case of the linear model using mixture data, we see that our model has a high bias due to a large number of orange points and blue points being predicted wrongly. 
