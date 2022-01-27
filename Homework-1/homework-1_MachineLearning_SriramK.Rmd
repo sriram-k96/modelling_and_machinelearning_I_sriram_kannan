@@ -1,0 +1,95 @@
+---
+title: "Homework - I"
+author: ' Sriram Kannan'
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+
+
+```{r}
+library('class')
+library('dplyr')
+load(url('https://web.stanford.edu/~hastie/ElemStatLearn/datasets/ESL.mixture.rda'))
+dat <- ESL.mixture
+```
+
+
+```{r}
+plot_mix_data <- expression({
+  plot(dat$x[,1], dat$x[,2],
+       col=ifelse(dat$y==0, 'blue', 'orange'),
+       pch=20,
+       xlab=expression(x[1]),
+       ylab=expression(x[2]))
+  ## draw Bayes (True) classification boundary
+  prob <- matrix(dat$prob, length(dat$px1), length(dat$px2))
+  cont <- contourLines(dat$px1, dat$px2, prob, levels=0.5)
+  rslt <- sapply(cont, lines, col='purple')
+})
+
+eval(plot_mix_data)
+```
+
+
+1) Re-write the functions fit_lc and predict_lc using lm, and the associated predict method for lm objects.
+
+```{r}
+#lm classifier
+data <- data.frame(y = dat$y, x1 = dat$x[,1], x2 = dat$x[,2])
+data
+fit_lm <- lm(y ~ x1+x2, data = data)
+summary(fit_lm)
+predict_lm <- predict(fit_lm, newdata = data.frame(dat$xnew))
+
+
+
+```
+
+
+
+```{r}
+## reshape predictions as a matrix
+pred_lm <- matrix(predict_lm, length(dat$px1), length(dat$px2))
+contour(pred_lm,
+      xlab=expression(x[1]),
+      ylab=expression(x[2]))
+```
+
+
+```{r}
+## find the contours in 2D space such that lc_pred == 0.5
+cont_lm <- contourLines(dat$px1, dat$px2, pred_lm, levels=0.5)
+
+## plot data and decision surface
+eval(plot_mix_data)
+sapply(cont_lm, lines)
+```
+
+Consider making the linear classifier more flexible, by adding squared terms for x1 and x2 to the linear model
+
+```{r}
+fit_lm_squared <- lm(y ~ x1^2+x2^2, data = data)
+predict_lm_squared <- predict(fit_lm_squared, newdata = data.frame(dat$xnew))
+pred_lm_squared <- matrix(predict_lm_squared, length(dat$px1), length(dat$px2))
+contour(pred_lm,
+      xlab=expression(x[1]),
+      ylab=expression(x[2]))
+
+cont_lm_squared <- contourLines(dat$px1, dat$px2, pred_lm_squared, levels=0.5)
+
+## plot data and decision surface
+eval(plot_mix_data)
+sapply(cont_lm_squared, lines)
+
+```
+Describe how this more flexible model affects the bias-variance tradeoff
+
+Bias - Variance Tradeoff : 
+
+
