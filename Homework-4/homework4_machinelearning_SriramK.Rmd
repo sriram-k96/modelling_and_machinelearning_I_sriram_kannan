@@ -28,25 +28,179 @@ library(ISLR2)
 (a) Produce some numerical and graphical summaries of the Weekly data. Do there appear to be any patterns?
 
 ```{r}
-Weekly
 summary(Weekly)
+```
+```{r}
+cor(Weekly[-9])
+```
+The only high correlation that is observed is between Year and Volume. The plot below shows this trend. The rise in index corresponds to the passage of weeks over time and hence is a time series starting from 1990 - 2009 in Week Numbers. 
+
+```{r}
+attach(Weekly)
+plot(Volume)
 ```
 
 (b) Use the full data set to perform a logistic regression with Direction as the response and the five lag variables plus Volume as predictors. Use the summary function to print the results. Do any of the predictors appear to be statistically significant? If so, which ones?
 
+```{r}
+glm.fits <- glm(
+Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume ,
+data = Weekly , family = binomial)
+summary(glm.fits)
+```
+Based on the P-Values, We can conclude that Lag 2 is statistically significant as it has a p-value < 0.05. 
+
 (c) Compute the confusion matrix and overall fraction of correct predictions. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.
+
+```{r}
+glm.probs <- predict(glm.fits , type = "response")
+glm.pred <- rep("Down", 1089)
+glm.pred[glm.probs > .5] = "Up"
+table(glm.pred , Direction)
+mean(glm.pred == Direction)
+```
+The confusion matrix shows both the false positives - The number of predictions that were Down but were predicted as Up = 48 and the false negatives, i.e the number of Predictions that were Up but predicted as Down = 430.
 
 (d) Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).
 
+```{r}
+train <- (Year <= 2008)
+Weekly.2008 = Weekly[!train, ]
+Direction.2008 <- Direction[!train]
+
+glm.fits <- glm(
+Direction ~ Lag2 ,
+data = Weekly , family = binomial , subset = train
+)
+glm.probs <- predict(glm.fits , Weekly.2008,
+type = "response")
+
+glm.pred <- rep("Down", 104)
+glm.pred[glm.probs > .5] <- "Up"
+table(glm.pred , Direction.2008)
+
+mean(glm.pred != Direction.2008)
+```
+The overall fraction of correct predictions for the held out data/test data is 0.375 in case of Logistic Regression. 
+
 (e) Repeat (d) using LDA.
+
+```{r}
+library(MASS)
+lda.fit <- lda(Direction ~ Lag2 , data = Weekly , subset = train)
+lda.pred <- predict(lda.fit , Weekly.2008)
+lda.class <- lda.pred$class
+table(lda.class, Direction.2008)
+mean(lda.class == Direction.2008)
+
+```
+The overall fraction of correct predictions for the held out data/test data is 0.625 in case of LDA. 
 
 (f) Repeat (d) using QDA.
 
+```{r}
+qda.fit <- qda(Direction ~ Lag2 , data = Weekly , subset = train)
+qda.pred <- predict(qda.fit , Weekly.2008)
+qda.class <- qda.pred$class
+table(qda.class, Direction.2008)
+mean(qda.class == Direction.2008)
+```
+The overall fraction of correct predictions for the held out data/test data is 0.5865 in case of QDA. 
+
 (g) Repeat (d) using KNN with K = 1.
+
+```{r}
+library(class)
+library(tidyverse)
+```
+
+```{r}
+train.X <- Weekly %>% filter(Year <= 2008) %>% select(Lag2)
+test.X <- Weekly %>% filter(Year > 2008) %>% select(Lag2)
+train.Direction <- Direction[train]
+set.seed (1)
+knn.pred <- knn(train.X, test.X, train.Direction , k = 1)
+table(knn.pred , Direction.2008)
+mean(knn.pred == Direction.2008)
+```
+The overall fraction of correct predictions for the held out data/test data is 0.5 in case of KNN using K = 1.
 
 (h) Repeat (d) using naive Bayes.
 
+```{r}
+library(e1071)
+nb.fit <- naiveBayes(Direction ~ Lag2 , data = Weekly, subset = train)
+nb.class <- predict(nb.fit , Weekly.2008)
+table(nb.class , Direction.2008)
+mean(nb.class == Direction.2008)
+
+```
+The overall fraction of correct predictions for the held out data/test data is 0.5865 in case of Naive Bayes. 
+
 (i) Which of these methods appears to provide the best results on this data?
+
+Based on the Parameters used, for the Weekly Data using Lag2 as the sole predictor, LDA appears to provide the best results. 
 
 (j) Experiment with different combinations of predictors, including possible transformations and interactions, for each of the methods. Report the variables, method, and associated confusion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for
 K in the KNN classifier.
+
+```{r}
+#Logistic Regression  - Using Lag1, 2 and 4 (Least 3 P-values)
+glm.fits <- glm(
+Direction ~  Lag1 + Lag2 - Lag4,
+data = Weekly , family = binomial , subset = train
+)
+glm.probs <- predict(glm.fits , Weekly.2008,
+type = "response")
+
+glm.pred <- rep("Down", 104)
+glm.pred[glm.probs > .5] <- "Up"
+table(glm.pred , Direction.2008)
+
+mean(glm.pred != Direction.2008)
+```
+We get a better prediction with Logistic Regression now, with using Lag 1, 2 and 4 in a different interaction that just using Lag 2. It still however, is lower than LDA with just Lag2. 
+
+```{r}
+#QDA
+qda.fit <- qda(Direction ~ Lag1 + Lag2 - Lag4 , data = Weekly , subset = train)
+qda.pred <- predict(qda.fit , Weekly.2008)
+qda.class <- qda.pred$class
+table(qda.class, Direction.2008)
+mean(qda.class == Direction.2008)
+```
+We see a deterioration in the performance of QDA when using the same interaction with Lag1, Lag2 and Lag4 as above over the original model with just Lag2. 
+
+```{r}
+#Naive Bayes
+nb.fit <- naiveBayes(Direction ~ Lag1 + Lag2 - Lag4 , data = Weekly, subset = train)
+nb.class <- predict(nb.fit , Weekly.2008)
+table(nb.class , Direction.2008)
+mean(nb.class == Direction.2008)
+```
+We see a deterioration in the performance of Naive Bayes when using the same interaction with Lag1, Lag2 and Lag4 as above over the original model with just Lag2.
+
+
+```{r}
+train.X <- Weekly %>% filter(Year <= 2008) %>% select(Lag2)
+test.X <- Weekly %>% filter(Year > 2008) %>% select(Lag2)
+train.Direction <- Direction[train]
+set.seed (1)
+knn.pred <- knn(train.X, test.X, train.Direction , k = 20)
+table(knn.pred , Direction.2008)
+mean(knn.pred == Direction.2008)
+
+```
+In case of KNN, Using K = 20, We see an increase in model accuracy as opposed to using K = 1 with the same Lag2 as the predictor. Is is still however, lower than the accuracy of the original LDA model.
+
+```{r}
+lda.fit <- lda(Direction ~ Lag1 + Lag2 - Lag4 , data = Weekly , subset = train)
+lda.pred <- predict(lda.fit , Weekly.2008)
+lda.class <- lda.pred$class
+table(lda.class, Direction.2008)
+mean(lda.class == Direction.2008)
+```
+We see a deterioration in the performance of LDA when using the same interaction with Lag1, Lag2 and Lag4 as above over the original model with just Lag2.
+
+
+We thus conclude that the original LDA model with an accuracy of 0.625 provides the best predictions with just Lag2 being used as the predictor. Which is understandable as that's the only statistically significant predictor based on the P-values with only Logistic Regression breaking this trend but still falling lower than LDA. 
