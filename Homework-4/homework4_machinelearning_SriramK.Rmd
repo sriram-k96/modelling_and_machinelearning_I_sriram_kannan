@@ -8,15 +8,48 @@ When the number of features p is large, there tends to be a deterioration in the
 
 (a) Suppose that we have a set of observations, each with measurements on p = 1 feature, X. We assume that X is uniformly (evenly) distributed on [0, 1]. Associated with each observation is a response value. Suppose that we wish to predict a test observation’s response using only observations that are within 10% of the range of X closest to that test observation. For instance, in order to predict the response for a test observation with X = 0.6, we will use observations in the range [0.55, 0.65]. On average, what fraction of the available observations will we use to make the prediction?
 
+```{r}
+(10*95 + 9 + 8 + 7 + 6 + 5)/100
+```
+On average we use 9.85% of the observations as over 0.95 or 95% of the given domain [0,1], we lose values on the right hand side of X due to 1 being a hard limit. 
+
 (b) Now suppose that we have a set of observations, each with measurements on p = 2 features, X1 and X2. We assume that (X1,X2) are uniformly distributed on [0, 1] × [0, 1]. We wish to predict a test observation’s response using only observations that are within 10% of the range of X1 and within 10% of the range
 of X2 closest to that test observation. For instance, in order to predict the response for a test observation with X1 = 0.6 and X2 = 0.35, we will use observations in the range [0.55, 0.65] for X1 and in the range [0.3, 0.4] for X2. On average, what fraction of the available observations will we use to make the prediction?
 
+```{r}
+sqrt(9.85)
+```
+We have doubled the dimensions while having the same number of points. Here we consider 2-D points with co-ordinates X1 and X2. Consider a hypercube or a hypersphere - the volume of the space is increases exponentially with increase in dimensions. We thus only use 3.13% of the observations when we have 2 dimensions. 
+
 (c) Now suppose that we have a set of observations on p = 100 features. Again the observations are uniformly distributed on each feature, and again each feature ranges in value from 0 to 1. We wish to predict a test observation’s response using observations within the 10% of each feature’s range that is closest to that test observation. What fraction of the available observations will we use to make the prediction?
+
+```{r}
+9.85^(1/100)
+```
+Similarly, we only use 1.02% of the observations when we have 100 dimensions.
 
 (d) Using your answers to parts (a)–(c), argue that a drawback of KNN when p is large is that there are very few training observations “near” any given test observation.
 
+As can be seen in the previous answers, we're using less and less fractions of available observations precisely due to the fact that the density of observations exponentially decrease as the volume of the "hyperspace - i.e, space in n dimensions" increases. Thereby we conclude that there are very few training observations "near" any test observation. The "nearness" becomes harder and harder to discern as dimensions increase as explained further below.
+
+
 (e) Now suppose that we wish to make a prediction for a test observation by creating a p-dimensional hypercube centered around the test observation that contains, on average, 10% of the training observations. For p = 1, 2, and 100, what is the length of each side of the hypercube? Comment on your answer.
 Note: A hypercube is a generalization of a cube to an arbitrary number of dimensions. When p = 1, a hypercube is simply a line segment, when p = 2 it is a square, and when p = 100 it is a 100-dimensional cube.
+
+Edge Length of Hypercube ep = f^1/p 
+Plugging in the values, we have 
+f = 0.1 (As test observations contain 10% of the training observations)
+
+```{r}
+e1 = 0.1^(1/1)
+e2 = 0.1^(1/2)
+e3 = 0.1^(1/100)
+e1
+e2
+e3
+```
+As we can see, the length of the hypercube increases as the dimensions increase. Considering the maximum possible length is 1 (While using all observations in 1 dimension), we see that in order to utilize 10% of the training observations, in higher dimensions we'd have to search disproportionately farther away in order to find the values we need. There's a lot of empty space in high dimensions and hence it's very difficult to find observations that are close by. In case of 100 dimensions, we have to use 97.7% of the maximum length of the hypercube to get merely 10% of the observations showing how much farther apart the observations are. The key observation here is that the scaling is severly non-linear. In order to get 20% of the observations, we'd have to use 98.4% of the length and the difference decreases as we increase the % of observations used. The huge drawback here is that there's little difference between the closest point and the other points that are farther away. "Nearest Neighbours" loses its meaning to a large degree as the degree of "nearness" massively reduces as dimensions increase and becomes increasingly hard to ascertain when we reduce the fraction of neighbours we consider as "nearest". 
+
 
 13. This question should be answered using the Weekly data set, which is part of the ISLR2 package. This data is similar in nature to the Smarket data from this chapter’s lab, except that it contains 1, 089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.
 

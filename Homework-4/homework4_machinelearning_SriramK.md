@@ -21,6 +21,16 @@ investigate this curse.
     fraction of the available observations will we use to make the
     prediction?
 
+``` r
+(10*95 + 9 + 8 + 7 + 6 + 5)/100
+```
+
+    ## [1] 9.85
+
+On average we use 9.85% of the observations as over 0.95 or 95% of the
+given domain \[0,1\], we lose values on the right hand side of X due to
+1 being a hard limit.
+
 2.  Now suppose that we have a set of observations, each with
     measurements on p = 2 features, X1 and X2. We assume that (X1,X2)
     are uniformly distributed on \[0, 1\] × \[0, 1\]. We wish to predict
@@ -32,6 +42,18 @@ investigate this curse.
     range \[0.3, 0.4\] for X2. On average, what fraction of the
     available observations will we use to make the prediction?
 
+``` r
+sqrt(9.85)
+```
+
+    ## [1] 3.138471
+
+We have doubled the dimensions while having the same number of points.
+Here we consider 2-D points with co-ordinates X1 and X2. Consider a
+hypercube or a hypersphere - the volume of the space is increases
+exponentially with increase in dimensions. We thus only use 3.13% of the
+observations when we have 2 dimensions.
+
 3.  Now suppose that we have a set of observations on p = 100 features.
     Again the observations are uniformly distributed on each feature,
     and again each feature ranges in value from 0 to 1. We wish to
@@ -40,9 +62,26 @@ investigate this curse.
     observation. What fraction of the available observations will we use
     to make the prediction?
 
+``` r
+9.85^(1/100)
+```
+
+    ## [1] 1.023138
+
+Similarly, we only use 1.02% of the observations when we have 100
+dimensions.
+
 4.  Using your answers to parts (a)–(c), argue that a drawback of KNN
     when p is large is that there are very few training observations
     “near” any given test observation.
+
+As can be seen in the previous answers, we’re using less and less
+fractions of available observations precisely due to the fact that the
+density of observations exponentially decrease as the volume of the
+“hyperspace - i.e, space in n dimensions” increases. Thereby we conclude
+that there are very few training observations “near” any test
+observation. The “nearness” becomes harder and harder to discern as
+dimensions increase as explained further below.
 
 5.  Now suppose that we wish to make a prediction for a test observation
     by creating a p-dimensional hypercube centered around the test
@@ -53,7 +92,48 @@ investigate this curse.
     p = 1, a hypercube is simply a line segment, when p = 2 it is a
     square, and when p = 100 it is a 100-dimensional cube.
 
-<!-- -->
+Edge Length of Hypercube ep = f^1/p Plugging in the values, we have f =
+0.1 (As test observations contain 10% of the training observations)
+
+``` r
+e1 = 0.1^(1/1)
+e2 = 0.1^(1/2)
+e3 = 0.1^(1/100)
+e1
+```
+
+    ## [1] 0.1
+
+``` r
+e2
+```
+
+    ## [1] 0.3162278
+
+``` r
+e3
+```
+
+    ## [1] 0.9772372
+
+As we can see, the length of the hypercube increases as the dimensions
+increase. Considering the maximum possible length is 1 (While using all
+observations in 1 dimension), we see that in order to utilize 10% of the
+training observations, in higher dimensions we’d have to search
+disproportionately farther away in order to find the values we need.
+There’s a lot of empty space in high dimensions and hence it’s very
+difficult to find observations that are close by. In case of 100
+dimensions, we have to use 97.7% of the maximum length of the hypercube
+to get merely 10% of the observations showing how much farther apart the
+observations are. The key observation here is that the scaling is
+severly non-linear. In order to get 20% of the observations, we’d have
+to use 98.4% of the length and the difference decreases as we increase
+the % of observations used. The huge drawback here is that there’s
+little difference between the closest point and the other points that
+are farther away. “Nearest Neighbours” loses its meaning to a large
+degree as the degree of “nearness” massively reduces as dimensions
+increase and becomes increasingly hard to ascertain when we reduce the
+fraction of neighbours we consider as “nearest”.
 
 13. This question should be answered using the Weekly data set, which is
     part of the ISLR2 package. This data is similar in nature to the
@@ -129,7 +209,7 @@ attach(Weekly)
 plot(Volume)
 ```
 
-![](homework4_machinelearning_SriramK_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](homework4_machinelearning_SriramK_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 2.  Use the full data set to perform a logistic regression with
     Direction as the response and the five lag variables plus Volume as
