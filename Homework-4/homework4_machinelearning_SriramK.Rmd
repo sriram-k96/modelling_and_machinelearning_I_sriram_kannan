@@ -14,7 +14,7 @@ dec = sum(seq(from = 9.99, to = 5, by = -0.00001)/100000)
 (inc + 10*90 + dec)/100
 ```
 
-On average we use 9.748% of the observations are utilized as over 90 or below 10 of the given domain [0,1], we lose values on the right hand side of X or left hand side of X respectively due to 1 and 0 being hard limits. 
+On average 9.748% of the observations are utilized as over 90 or below 10 of the given domain [0,1], we lose values on the right hand side of X or left hand side of X respectively due to 1 and 0 being hard limits. 
 Here, inc and dec are sequenced as simulations of uniform continuous distributions for values below 10 and above 90 to showcase the loss of values due to domain limits in each of their conditions. In case of the remianing values where the full 10% of the observations can be used, a continuous or a discrete distribution each average out to 10 hence, 10*90 is shown for the sake of simplicity. 
 
 (b) Now suppose that we have a set of observations, each with measurements on p = 2 features, X1 and X2. We assume that (X1,X2) are uniformly distributed on [0, 1] × [0, 1]. We wish to predict a test observation’s response using only observations that are within 10% of the range of X1 and within 10% of the range
