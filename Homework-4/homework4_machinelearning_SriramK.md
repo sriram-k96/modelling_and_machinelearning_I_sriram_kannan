@@ -22,16 +22,16 @@ investigate this curse.
     prediction?
 
 ``` r
-inc = sum(seq(from = 5, to = 9.99, by = 0.00001)/100000)
-dec = sum(seq(from = 9.99, to = 5, by = -0.00001)/100000)
+inc = sum(seq(from = 5, to = 9.999999, by = 0.000001)/1000000)
+dec = sum(seq(from = 9.999999, to = 5, by = -0.000001)/1000000)
 (inc + 10*90 + dec)/100
 ```
 
-    ## [1] 9.748002
+    ## [1] 9.75
 
-On average 9.748% of the observations are utilized as over 90 or below
-10 of the given domain \[0,1\], we lose values on the right hand side of
-X or left hand side of X respectively due to 1 and 0 being hard limits.
+On average 9.5% of the observations are utilized as over 90 or below 10
+of the given domain \[0,1\], we lose values on the right hand side of X
+or left hand side of X respectively due to 1 and 0 being hard limits.
 Here, inc and dec are sequenced as simulations of uniform continuous
 distributions for values below 10 and above 90 to showcase the loss of
 values due to domain limits in each of their conditions. In case of the
@@ -51,10 +51,10 @@ continuous or a discrete distribution each average out to 10 hence,
     available observations will we use to make the prediction?
 
 ``` r
-sqrt(9.7480002)
+sqrt(9.75)
 ```
 
-    ## [1] 3.122179
+    ## [1] 3.122499
 
 We have doubled the dimensions while having the same number of points.
 Here we consider 2-D points with co-ordinates X1 and X2. Consider a
@@ -71,10 +71,10 @@ the observations when we have 2 dimensions.
     to make the prediction?
 
 ``` r
-9.7380002^(1/100)
+9.75^(1/100)
 ```
 
-    ## [1] 1.023021
+    ## [1] 1.023034
 
 Similarly, we only use 1.023% of the observations when we have 100
 dimensions.

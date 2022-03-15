@@ -9,26 +9,26 @@ When the number of features p is large, there tends to be a deterioration in the
 (a) Suppose that we have a set of observations, each with measurements on p = 1 feature, X. We assume that X is uniformly (evenly) distributed on [0, 1]. Associated with each observation is a response value. Suppose that we wish to predict a test observation’s response using only observations that are within 10% of the range of X closest to that test observation. For instance, in order to predict the response for a test observation with X = 0.6, we will use observations in the range [0.55, 0.65]. On average, what fraction of the available observations will we use to make the prediction?
 
 ```{r}
-inc = sum(seq(from = 5, to = 9.99, by = 0.00001)/100000)
-dec = sum(seq(from = 9.99, to = 5, by = -0.00001)/100000)
+inc = sum(seq(from = 5, to = 9.999999, by = 0.000001)/1000000)
+dec = sum(seq(from = 9.999999, to = 5, by = -0.000001)/1000000)
 (inc + 10*90 + dec)/100
 ```
 
-On average 9.748% of the observations are utilized as over 90 or below 10 of the given domain [0,1], we lose values on the right hand side of X or left hand side of X respectively due to 1 and 0 being hard limits. 
+On average 9.5% of the observations are utilized as over 90 or below 10 of the given domain [0,1], we lose values on the right hand side of X or left hand side of X respectively due to 1 and 0 being hard limits. 
 Here, inc and dec are sequenced as simulations of uniform continuous distributions for values below 10 and above 90 to showcase the loss of values due to domain limits in each of their conditions. In case of the remianing values where the full 10% of the observations can be used, a continuous or a discrete distribution each average out to 10 hence, 10*90 is shown for the sake of simplicity. 
 
 (b) Now suppose that we have a set of observations, each with measurements on p = 2 features, X1 and X2. We assume that (X1,X2) are uniformly distributed on [0, 1] × [0, 1]. We wish to predict a test observation’s response using only observations that are within 10% of the range of X1 and within 10% of the range
 of X2 closest to that test observation. For instance, in order to predict the response for a test observation with X1 = 0.6 and X2 = 0.35, we will use observations in the range [0.55, 0.65] for X1 and in the range [0.3, 0.4] for X2. On average, what fraction of the available observations will we use to make the prediction?
 
 ```{r}
-sqrt(9.7480002)
+sqrt(9.75)
 ```
 We have doubled the dimensions while having the same number of points. Here we consider 2-D points with co-ordinates X1 and X2. Consider a hypercube or a hypersphere - the volume of the space is increases exponentially with increase in dimensions. We thus only use 3.122% of the observations when we have 2 dimensions. 
 
 (c) Now suppose that we have a set of observations on p = 100 features. Again the observations are uniformly distributed on each feature, and again each feature ranges in value from 0 to 1. We wish to predict a test observation’s response using observations within the 10% of each feature’s range that is closest to that test observation. What fraction of the available observations will we use to make the prediction?
 
 ```{r}
-9.7380002^(1/100)
+9.75^(1/100)
 ```
 Similarly, we only use 1.023% of the observations when we have 100 dimensions.
 
