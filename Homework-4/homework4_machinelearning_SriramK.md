@@ -22,14 +22,22 @@ investigate this curse.
     prediction?
 
 ``` r
-(10*95 + 9 + 8 + 7 + 6 + 5)/100
+inc = sum(seq(from = 5, to = 9.99, by = 0.00001)/100000)
+dec = sum(seq(from = 9.99, to = 5, by = -0.00001)/100000)
+(inc + 10*90 + dec)/100
 ```
 
-    ## [1] 9.85
+    ## [1] 9.748002
 
-On average we use 9.85% of the observations as over 0.95 or 95% of the
-given domain \[0,1\], we lose values on the right hand side of X due to
-1 being a hard limit.
+On average 9.748% of the observations are utilized as over 90 or below
+10 of the given domain \[0,1\], we lose values on the right hand side of
+X or left hand side of X respectively due to 1 and 0 being hard limits.
+Here, inc and dec are sequenced as simulations of uniform continuous
+distributions for values below 10 and above 90 to showcase the loss of
+values due to domain limits in each of their conditions. In case of the
+remianing values where the full 10% of the observations can be used, a
+continuous or a discrete distribution each average out to 10 hence,
+10\*90 is shown for the sake of simplicity.
 
 2.  Now suppose that we have a set of observations, each with
     measurements on p = 2 features, X1 and X2. We assume that (X1,X2)
@@ -43,16 +51,16 @@ given domain \[0,1\], we lose values on the right hand side of X due to
     available observations will we use to make the prediction?
 
 ``` r
-sqrt(9.85)
+sqrt(9.7480002)
 ```
 
-    ## [1] 3.138471
+    ## [1] 3.122179
 
 We have doubled the dimensions while having the same number of points.
 Here we consider 2-D points with co-ordinates X1 and X2. Consider a
 hypercube or a hypersphere - the volume of the space is increases
-exponentially with increase in dimensions. We thus only use 3.13% of the
-observations when we have 2 dimensions.
+exponentially with increase in dimensions. We thus only use 3.122% of
+the observations when we have 2 dimensions.
 
 3.  Now suppose that we have a set of observations on p = 100 features.
     Again the observations are uniformly distributed on each feature,
@@ -63,12 +71,12 @@ observations when we have 2 dimensions.
     to make the prediction?
 
 ``` r
-9.85^(1/100)
+9.7380002^(1/100)
 ```
 
-    ## [1] 1.023138
+    ## [1] 1.023021
 
-Similarly, we only use 1.02% of the observations when we have 100
+Similarly, we only use 1.023% of the observations when we have 100
 dimensions.
 
 4.  Using your answers to parts (a)–(c), argue that a drawback of KNN
