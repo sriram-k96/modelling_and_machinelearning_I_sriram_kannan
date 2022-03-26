@@ -5,169 +5,6 @@ output:
   github_document
 ---
 
-```{r}
-library('MASS') ## for 'mcycle'
-library('manipulate') ## for 'manipulate'
-
-y <- mcycle$accel
-x <- matrix(mcycle$times, length(mcycle$times), 1)
-
-x
-#plot(x, y, xlab="Time (ms)", ylab="Acceleration (g)")
-```
-
-
-```{r}
-## Epanechnikov kernel function
-## x  - n x p matrix of training inputs
-## x0 - 1 x p input where to make prediction
-## lambda - bandwidth (neighborhood size)
-kernel_epanechnikov <- function(x, x0, lambda=1) {
-  d <- function(t)
-    ifelse(t <= 1, 3/4*(1-t^2), 0)
-  z <- t(t(x) - x0)
-  d(sqrt(rowSums(z*z))/lambda)
-}
-```
-
-
-```{r}
-## k-NN kernel function
-## x  - n x p matrix of training inputs
-## x0 - 1 x p input where to make prediction
-## k  - number of nearest neighbors
-kernel_k_nearest_neighbors <- function(x, x0, k=1) {
-  ## compute distance betwen each x and x0
-  z <- t(t(x) - x0)
-  d <- sqrt(rowSums(z*z))
-
-  ## initialize kernel weights to zero
-  w <- rep(0, length(d))
-  
-  ## set weight to 1 for k nearest neighbors
-  w[order(d)[1:k]] <- 1
-  
-  return(w)
-}
-```
-
-
-```{r}
-## Make predictions using the NW method
-## y  - n x 1 vector of training outputs
-## x  - n x p matrix of training inputs
-## x0 - m x p matrix where to make predictions
-## kern  - kernel function to use
-## ... - arguments to pass to kernel function
-nadaraya_watson <- function(y, x, x0, kern, ...) {
-  k <- t(apply(x0, 1, function(x0_) {
-    k_ <- kern(x, x0_, ...)
-    k_/sum(k_)
-  }))
-  yhat <- drop(k %*% y)
-  attr(yhat, 'k') <- k
-  return(yhat)
-}
-```
-
-
-```{r}
-## Helper function to view kernel (smoother) matrix
-matrix_image <- function(x) {
-  rot <- function(x) t(apply(x, 2, rev))
-  cls <- rev(gray.colors(20, end=1))
-  image(rot(x), col=cls, axes=FALSE)
-  xlb <- pretty(1:ncol(x))
-  xat <- (xlb-0.5)/ncol(x)
-  ylb <- pretty(1:nrow(x))
-  yat <- (ylb-0.5)/nrow(x)
-  axis(3, at=xat, labels=xlb)
-  axis(2, at=yat, labels=ylb)
-  mtext('Rows', 2, 3)
-  mtext('Columns', 3, 3)
-}
-```
-
-
-```{r}
-## Compute effective df using NW method
-## y  - n x 1 vector of training outputs
-## x  - n x p matrix of training inputs
-## kern  - kernel function to use
-## ... - arguments to pass to kernel function
-effective_df <- function(y, x, kern, ...) {
-  y_hat <- nadaraya_watson(y, x, x,
-    kern=kern, ...)
-  sum(diag(attr(y_hat, 'k')))
-}
-```
-
-
-```{r}
-## loss function
-## y    - train/test y
-## yhat - predictions at train/test x
-loss_squared_error <- function(y, yhat)
-  (y - yhat)^2
-```
-
-
-```{r}
-## test/train error
-## y    - train/test y
-## yhat - predictions at train/test x
-## loss - loss function
-error <- function(y, yhat, loss=loss_squared_error)
-  mean(loss(y, yhat))
-```
-
-
-```{r}
-## AIC
-## y    - training y
-## yhat - predictions at training x
-## d    - effective degrees of freedom
-aic <- function(y, yhat, d)
-  error(y, yhat) + 2/length(y)*d
-```
-
-
-```{r}
-## BIC
-## y    - training y
-## yhat - predictions at training x
-## d    - effective degrees of freedom
-bic <- function(y, yhat, d)
-  error(y, yhat) + log(length(y))/length(y)*d
-```
-
-
-```{r}
-
-
-## how does k affect shape of predictor and eff. df using k-nn kernel ?
-k_slider = kparam
-manipulate({
-  ## make predictions using NW method at training inputs
-  y_hat <- nadaraya_watson(y, x, x,
-    kern=kernel_k_nearest_neighbors, k=k_slider)
-  edf <- effective_df(y, x,
-    kern=kernel_k_nearest_neighbors, k=k_slider)
-  aic_ <- aic(y, y_hat, edf)
-  bic_ <- bic(y, y_hat, edf)
-  y_hat_plot <- nadaraya_watson(y, x, x_plot,
-    kern=kernel_k_nearest_neighbors, k=k_slider)
-  plot(x, y, xlab="Time (ms)", ylab="Acceleration (g)")
-  legend('topright', legend = c(
-    paste0('eff. df = ', round(edf,1)),
-    paste0('aic = ', round(aic_, 1)),
-    paste0('bic = ', round(bic_, 1))),
-    bty='n')
-  lines(x_plot, y_hat_plot, col="#882255", lwd=2)
-}, k_slider=slider(1, 10, initial=3, step=1))
-
-```
-
 1) Randomly split the mcycle data into training (75%) and validation (25%) subsets.
 
 ```{r}
@@ -331,16 +168,49 @@ plot(k_param, v, xlab="k", ylab="test error", type = "l", main = "Test error usi
 
 ```{r}
 library(caret)
-library(glmnet)
-?train()
+library(matrixStats)
+set.seed(100)
+flds <- createFolds(mcycle$accel, k = 5)
+print(flds)
+sapply(flds, length)
+
+cvknn <- function(kNN = 10, flds = flds)
+{
+  cverr <- rep(NA, length(flds))
+  for(tst_idx in 1:length(flds))
+  {
+    acc_trn <- mcycle[-flds[[tst_idx]],]
+    acc_tst <- mcycle[flds[[tst_idx]],]
+    
+    knn_fit <- knnreg(accel ~ times, k = kNN, data = acc_trn)
+    pre_tst <- predict(knn_fit, acc_tst)
+    cverr[tst_idx] <- mean((acc_tst$accel - pre_tst)^2)
+  }
+  return(cverr)
+}
+
+cvvers = matrix(, nrow = length(k_param), ncol = 5)
+
+for (i in 1:length(k_param))
+{
+  val <- cvknn(k_param[i], flds)
+  cvvers[i,] <- val
+}
+cvvers
+cvvers_mean <- rowMeans(cvvers)
+as.matrix(cvvers_mean)
+cvvers_sd <- rowSds(cvvers)
+as.matrix(cvvers_sd)
 ```
-
-
 
 5)Plot the CV-estimated test error (average of the five estimates from each fold) as a function of the tuning parameter. Add vertical line segments to the figure (using the segments function in R) that represent one “standard error” of the CV-estimated test error (standard deviation of the five estimates from each fold).
 
 ```{r}
-
+plot(k_param, cvvers_mean, xlab="k", ylab="test error - 5-Fold Average", type = "l", main = "Average 5-Fold CV Error using Squared Error Loss")
+sd <- 1
+segments(k_param,cvvers_mean-sd,k_param,cvvers_mean+sd)
 ```
 
 6) Interpret the resulting figures and select a suitable value for the tuning parameter.
+
+The resulting figure shows a drastic reduction in average test error as we approach 5 for the tuning parameter with a slight improvement at k = 10 with the error increasing dramatically beyond 10. This result is expected as the model is overfit under k = 4 and is undergit beyond k = 13 or so. Hence, ideally we'd like k to be around 10.
