@@ -449,8 +449,7 @@ of the five estimates from each fold).
 
 ``` r
 plot(k_param, cvvers_mean, xlab="k", ylab="test error - 5-Fold Average", type = "l", main = "Average 5-Fold CV Error using Squared Error Loss")
-sd <- 1
-segments(k_param,cvvers_mean-sd,k_param,cvvers_mean+sd)
+segments(x0 = k_param,x1 = k_param,y0 = cvvers_mean-cvvers_sd,y1 = cvvers_mean+cvvers_sd)
 ```
 
 ![](homework5_machinelearning_SriramK_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
