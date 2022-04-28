@@ -122,16 +122,16 @@ score <- model %>% evaluate(test_images, test_labels, verbose = 0)
 score
 ```
 
-    ##     loss accuracy 
-    ## 0.362046 0.870900
+    ##      loss  accuracy 
+    ## 0.3508546 0.8731000
 
 ``` r
 predictions <- model %>% predict(test_images)
 predictions[1, ]
 ```
 
-    ##  [1] 2.097862e-05 1.837528e-08 4.476495e-08 2.166520e-09 1.943991e-07
-    ##  [6] 7.960267e-04 5.096706e-06 1.104418e-02 4.013616e-06 9.881294e-01
+    ##  [1] 4.007385e-05 7.571050e-08 2.899660e-07 7.184571e-10 1.039051e-06
+    ##  [6] 8.080194e-03 2.040194e-06 1.406180e-02 8.758253e-07 9.778136e-01
 
 ``` r
 which.max(predictions[1, ])
@@ -199,98 +199,95 @@ library('dplyr')
 data("mixture.example")
 dat <- mixture.example
 
-## create 3D plot of mixture data
-plot_mixture_data <- function(dat=mixture.example, showtruth=FALSE) {
-  ## create 3D graphic, rotate to view 2D x1/x2 projection
-  par3d(FOV=1,userMatrix=diag(4))
-  plot3d(dat$xnew[,1], dat$xnew[,2], dat$prob, type="n",
-         xlab="x1", ylab="x2", zlab="",
-         axes=FALSE, box=TRUE, aspect=1)
-  ## plot points and bounding box
-  x1r <- range(dat$px1)
-  x2r <- range(dat$px2)
-  pts <- plot3d(dat$x[,1], dat$x[,2], 1,
-                type="p", radius=0.5, add=TRUE,
-                col=ifelse(dat$y, "orange", "blue"))
-  lns <- lines3d(x1r[c(1,2,2,1,1)], x2r[c(1,1,2,2,1)], 1)
+
+#Single 10-node hidden layer; fully connected.
+
+keras_fit <- keras_model_sequential()
+keras_fit %>% 
+  #hidden layer
+  layer_dense(units = 10, activation = 'relu') %>%
+  #output layer
+  layer_dense(units = 2, activation = 'softmax') 
   
-  if(showtruth) {
-    ## draw Bayes (True) classification boundary
-    probm <- matrix(dat$prob, length(dat$px1), length(dat$px2))
-    cls <- contourLines(dat$px1, dat$px2, probm, levels=0.5)
-    pls <- lapply(cls, function(p) 
-      lines3d(p$x, p$y, z=1, col='purple', lwd=3))
-    ## plot marginal probability surface and decision plane
-    sfc <- surface3d(dat$px1, dat$px2, dat$prob, alpha=1.0,
-      color="gray", specular="gray")
-    qds <- quads3d(x1r[c(1,2,2,1)], x2r[c(1,1,2,2)], 0.5, alpha=0.4,
-      color="gray", lit=FALSE)
-  }
-}
+keras_fit %>% compile(optimizer = 'adam', 
+                 loss = 'sparse_categorical_crossentropy', 
+                 metrics = c('accuracy') 
+                 )
 
-## compute and plot predictions
-plot_nnet_predictions <- function(fit, dat=mixture.example) {
-  
-  ## create figure
-  plot_mixture_data()
-
-  ## compute predictions from nnet
-  preds <- predict(fit, dat$xnew, type="class")
-  probs <- predict(fit, dat$xnew, type="raw")[,1]
-  probm <- matrix(probs, length(dat$px1), length(dat$px2))
-  cls <- contourLines(dat$px1, dat$px2, probm, levels=0.5)
-
-  ## plot classification boundary
-  pls <- lapply(cls, function(p) 
-    lines3d(p$x, p$y, z=1, col='purple', lwd=2))
-  
-  ## plot probability surface and decision plane
-  sfc <- surface3d(dat$px1, dat$px2, probs, alpha=1.0,
-                   color="gray", specular="gray")
-  #qds <- quads3d(x1r[c(1,2,2,1)], x2r[c(1,1,2,2)], 0.5, alpha=0.4,
-   #              color="gray", lit=FALSE)
-}
+keras_fit %>% fit(x=dat$x, y=dat$y, epochs = 5, verbose = 2) 
 ```
-
-``` r
-## plot data and 'true' probability surface
-plot_mixture_data(showtruth=TRUE)
-```
-
-``` r
-## fit single hidden layer, fully connected NN 
-## 10 hidden nodes
-fit <- nnet(x=dat$x, y=dat$y, size=10, entropy=TRUE, decay=0) 
-```
-
-    ## # weights:  41
-    ## initial  value 280.464184 
-    ## iter  10 value 95.585499
-    ## iter  20 value 87.521538
-    ## iter  30 value 81.109828
-    ## iter  40 value 73.146872
-    ## iter  50 value 65.147086
-    ## iter  60 value 64.282158
-    ## iter  70 value 63.121310
-    ## iter  80 value 62.994484
-    ## iter  90 value 62.809911
-    ## iter 100 value 62.590577
-    ## final  value 62.590577 
-    ## stopped after 100 iterations
-
-``` r
-plot_nnet_predictions(fit)
-## count total parameters
-## hidden layer w/10 nodes x (2 + 1) input nodes = 30 
-## output layer w/1 node x (10 + 1) hidden nodes = 11
-## 41 parameters total
-length(fit$wts)
-```
-
-    ## [1] 41
 
 3)Create a figure to illustrate that the predictions are (or are not)
 similar using the ‘nnet’ function versus the Keras model.
+
+``` r
+# plot data
+plot_mixture_data <- expression({
+  plot(dat$x[,1], dat$x[,2],
+       col=ifelse(dat$y==0, 'blue', 'orange'),
+       pch=20,
+       xlab=expression(x[1]),
+       ylab=expression(x[2]))
+  ## draw Bayes (True) classification boundary
+  prob <- matrix(dat$prob, length(dat$px1), length(dat$px2))
+  cont <- contourLines(dat$px1, dat$px2, prob, levels=0.5)
+  rslt <- sapply(cont, lines, col='purple')
+})
+```
+
+``` r
+keras_probs <- keras_fit %>% predict(dat$xnew)
+#keras_preds <- keras_fit %>% predict_classes(dat$xnew)
+plot_keras_preds <- function(fit, dat=mixture.example) {
+  
+  eval(plot_mixture_data)
+  probs <- keras_probs[,1]
+  #preds <- keras_preds
+  probm <- matrix(probs, length(dat$px1), length(dat$px2))
+  cls <- contourLines(dat$px1, dat$px2, probm, levels=0.5)
+  rslt <- sapply(cls, lines, col='black')
+}
+plot_keras_preds(keras_fit) 
+```
+
+![](homework7_machinelearning_SriramK_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+``` r
+# NNet
+nnet_fit <- nnet(x=dat$x, y=dat$y, size=10, entropy=TRUE, decay=0) 
+```
+
+    ## # weights:  41
+    ## initial  value 168.073414 
+    ## iter  10 value 98.954101
+    ## iter  20 value 90.008698
+    ## iter  30 value 82.502481
+    ## iter  40 value 77.083434
+    ## iter  50 value 72.272650
+    ## iter  60 value 66.766777
+    ## iter  70 value 64.894564
+    ## iter  80 value 62.859540
+    ## iter  90 value 61.143798
+    ## iter 100 value 58.892066
+    ## final  value 58.892066 
+    ## stopped after 100 iterations
+
+``` r
+nnet_preds <- predict(nnet_fit, dat$xnew, type="class")
+nnet_probs <- predict(nnet_fit, dat$xnew, type="raw")
+plot_nnet_preds <- function(fit, dat=mixture.example) {
+  
+  eval(plot_mixture_data)
+  preds <- nnet_preds
+  probs <- nnet_probs[,1]
+  probm <- matrix(probs, length(dat$px1), length(dat$px2))
+  cls <- contourLines(dat$px1, dat$px2, probm, levels=0.5)
+  rslt <- sapply(cls, lines, col='black')
+}
+plot_nnet_preds(nnet_fit) 
+```
+
+![](homework7_machinelearning_SriramK_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 4.  (optional extra credit) Convert the neural network described in the
     “Image Classification” tutorial to a network that is similar to one
@@ -310,7 +307,7 @@ model2 <- keras_model_sequential() %>%
 summary(model2)
 ```
 
-    ## Model: "sequential_1"
+    ## Model: "sequential_2"
     ## ________________________________________________________________________________
     ##  Layer (type)                       Output Shape                    Param #     
     ## ================================================================================
@@ -352,15 +349,15 @@ score
 ```
 
     ##      loss  accuracy 
-    ## 0.2741347 0.9028000
+    ## 0.2578286 0.9086000
 
 ``` r
 predictions <- model2 %>% predict(test_images)
 predictions[1, ]
 ```
 
-    ##  [1] 1.872141e-07 2.016101e-08 2.275393e-07 6.843116e-09 1.356982e-07
-    ##  [6] 2.371644e-03 5.514295e-07 1.131892e-03 1.113532e-06 9.964942e-01
+    ##  [1] 4.893352e-07 2.694193e-07 8.239990e-08 1.842365e-07 1.970815e-07
+    ##  [6] 2.618303e-04 6.381633e-08 3.777729e-03 1.976851e-06 9.959571e-01
 
 ``` r
 which.max(predictions[1, ])
